@@ -1,5 +1,7 @@
 package com.maocq.api;
 
+import com.maocq.model.account.Account;
+import com.maocq.usecase.createaccount.CreateAccountUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -9,20 +11,17 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class Handler {
-//private  final UseCase useCase;
-//private  final UseCase2 useCase2;
-    public Mono<ServerResponse> listenGETUseCase(ServerRequest serverRequest) {
-        // usecase.logic();
+
+    private final CreateAccountUseCase createAccountUseCase;
+
+    public Mono<ServerResponse> listenGETHello(ServerRequest serverRequest) {
         return ServerResponse.ok().bodyValue("Hello");
     }
 
-    public Mono<ServerResponse> listenGETOtherUseCase(ServerRequest serverRequest) {
-        // useCase2.logic();
-        return ServerResponse.ok().bodyValue("");
-    }
+    public Mono<ServerResponse> listenGETAccountUseCase(ServerRequest serverRequest) {
+        var id = serverRequest.queryParam("id")
+                .orElse("3ac79ddc-09a6-40dd-bf5d-ca26c7363d7a");
 
-    public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
-        // usecase.logic();
-        return ServerResponse.ok().bodyValue("");
+        return ServerResponse.ok().body(createAccountUseCase.getAccount(id), Account.class);
     }
 }
