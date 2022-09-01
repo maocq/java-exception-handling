@@ -25,20 +25,53 @@ public class RestConsumer implements AccountGateway {
     public Mono<Account> getAccount(String id) {
 
         return client
-            .get()
-            .uri("/v3/{id}", id)
-            //.exchangeToMono(...)
-            .retrieve()
-            .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse ->
+                .get()
+                .uri("/v3/{id}", id)
+                //.exchangeToMono(...)
+                .retrieve()
+                .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse ->
                     clientResponse.bodyToMono(ExternalError.class)
-                    .flatMap(error -> Mono.error(new ExternalBusinessException(EXTERNAR_MESSAGE_ERROR, error))))
-            .onStatus(HttpStatus::is4xxClientError, clientResponse -> Mono.error(new BusinessException(ACCOUNT_FIND_ERROR)))
-            .onStatus(HttpStatus::is5xxServerError, clientResponse -> Mono.error(new BusinessException(CHANNEL_TRANSACTION_NOT_FOUND)))
-            .bodyToMono(AccountDto.class)
-            .map(dto -> Account.builder()
-                    .accountId(dto.getAccountId())
-                    .name(dto.getName())
-                    .build())
-            .onErrorMap(TimeoutException.class, ex -> new TechnicalException(ex, TECHNICAL_RESTCLIENT_ERROR));
+                        .flatMap(error -> Mono.error(new ExternalBusinessException(EXTERNAR_MESSAGE_ERROR, error))))
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> Mono.error(new BusinessException(ACCOUNT_FIND_ERROR)))
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> Mono.error(new TechnicalException(CHANNEL_TRANSACTION_NOT_FOUND)))
+                .bodyToMono(AccountDto.class)
+                .map(dto -> Account.builder()
+                        .accountId(dto.getAccountId())
+                        .name(dto.getName())
+                        .build())
+                .onErrorMap(TimeoutException.class, ex -> new TechnicalException(ex, TECHNICAL_RESTCLIENT_ERROR));
+    }
+
+    public Mono<Account> getAccount2(String id) {
+
+        return client
+                .get()
+                .uri("/v3/{id}", id)
+                //.exchangeToMono(...)
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> Mono.error(new BusinessException(ACCOUNT_FIND_ERROR)))
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> Mono.error(new TechnicalException(CHANNEL_TRANSACTION_NOT_FOUND)))
+                .bodyToMono(AccountDto.class)
+                .map(dto -> Account.builder()
+                        .accountId(dto.getAccountId())
+                        .name(dto.getName())
+                        .build())
+                .onErrorMap(TimeoutException.class, ex -> new TechnicalException(ex, TECHNICAL_RESTCLIENT_ERROR));
+    }
+
+    public Mono<Account> getAccount3(String id) {
+
+        return client
+                .get()
+                .uri("/v3/{id}", id)
+                .exchangeToMono(clientResponse ->
+                        clientResponse.statusCode() == HttpStatus.NOT_FOUND
+                                ? Mono.empty()
+                                : clientResponse.bodyToMono(AccountDto.class))
+                .map(dto -> Account.builder()
+                        .accountId(dto.getAccountId())
+                        .name(dto.getName())
+                        .build())
+                .onErrorMap(TimeoutException.class, ex -> new TechnicalException(ex, TECHNICAL_RESTCLIENT_ERROR));
     }
 }

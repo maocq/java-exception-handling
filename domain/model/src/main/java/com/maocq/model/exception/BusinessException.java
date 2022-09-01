@@ -9,3 +9,4 @@ import lombok.RequiredArgsConstructor;
 public class BusinessException extends RuntimeException {
     private final ErrorMessage errorMessage;
 }
+

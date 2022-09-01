@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -43,6 +44,8 @@ public class ExceptionHandler extends AbstractErrorWebExceptionHandler {
                         .bodyValue(Map.of("code", error.getErrorMessage().getCode())))
                 .onErrorResume(TechnicalException.class, error -> ServerResponse.badRequest()
                         .bodyValue(Map.of("code", error.getErrorMessage().getCode())))
+
+                .onErrorResume(ResponseStatusException.class, error -> ServerResponse.status(error.getStatus()).build())
                 .onErrorResume(error -> ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).build())
                 .cast(ServerResponse.class);
     }
